@@ -1,16 +1,12 @@
 # flutter_application_sample
 
-A new Flutter project.
+A sample Flutter project with basic functionalities.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Tu run the project, after having installed Flutter&Dart (check it with the 'flutter doctor' on the terminal):
 
-A few resources to get you started if this is your first Flutter project:
+- run 'flutter pub get' on the terminal*
+- run 'flutter run' on the terminal*
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+*be sure that the terminal is in the directory of this project while launching the commands.
