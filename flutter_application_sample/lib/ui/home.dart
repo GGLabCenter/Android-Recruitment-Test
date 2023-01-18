@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_sample/data_provider.dart';
 import 'package:flutter_application_sample/models/comment.dart';
 import 'package:flutter_application_sample/models/post.dart';
+import 'package:flutter_application_sample/open_container.dart';
 import 'package:flutter_application_sample/ui/details.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -26,9 +27,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         floatingActionButton: FloatingActionButton(
-          onPressed: (() {}), //TODO new post from here addPost(),
+          onPressed: (() {
+            goToDetailsScreen(null);
+          }),
           tooltip: 'Add a new post',
-          child: const Icon(Icons.add),
+          child: OpenContainer(
+            transitionType: ContainerTransitionType.fadeThrough,
+            closedColor: Colors.blue,
+            openColor: Colors.white,
+            middleColor: Colors.blue,
+            closedElevation: 0.0,
+            openElevation: 4.0,
+            transitionDuration: const Duration(milliseconds: 1000),
+            openBuilder: (BuildContext context, VoidCallback _) =>
+                const DetailsScreen(post: null),
+            closedBuilder: (BuildContext _, VoidCallback openContainer) {
+              return const Icon(Icons.add);
+            },
+          ),
         ),
         appBar: AppBar(
           title: Text(widget.title),
@@ -45,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               } else if (snapshot.connectionState == ConnectionState.done) {
                 List<Post>? posts = snapshot.data;
-                print(posts!.length);
                 return _buildListView(posts);
               } else {
                 return const Center(
@@ -60,27 +75,50 @@ class _HomeScreenState extends State<HomeScreen> {
   /*
   DetailsScreen is used to add a new post or open in view mode an existing post.
   */
-  void goToDetailsScreen(Post post) {
+  void goToDetailsScreen(Post? post) {
     setState(() {
       Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => DetailsScreen(post: post)));
     });
   }
 
-  void _showModalSheet(List<Comment>? comments) {
+  void _showModalSheet(int postId) {
     showModalBottomSheet(
         context: context,
         builder: (builder) {
           return Container(
-              height: 200.0,
-              color: Colors.green,
-              child: Center(
-                  child: ListView.builder(
+            height: 400.0,
+            color: Colors.blueGrey,
+            child: FutureBuilder(
+              future: _dataProvider.getComments(postId),
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<Comment>?> snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                        "Something went wrong, error message: ${snapshot.error.toString()}"),
+                  );
+                } else if (snapshot.connectionState == ConnectionState.done) {
+                  List<Comment>? comments = snapshot.data;
+                  return ListView.builder(
                       itemCount: comments!.length,
                       itemBuilder: (context, index) {
                         Comment comment = comments[index];
-                        return Text(comment.body);
-                      })));
+                        return Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Card(
+                                child: Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Text(comment.body))));
+                      });
+                } else {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
+            ),
+          );
         });
   }
 
@@ -92,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: InkWell(
-              onTap: (() => print('test ')), //_showModalSheet,
+              onTap: (() => _showModalSheet(post.id)),
               child: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -109,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: <Widget>[
                           TextButton(
                               onPressed: () {
-                                // TODO
+                                showAlertDialog(
+                                    context, _dataProvider, post.id);
                               },
                               child: const Text(
                                 "Delete",
@@ -117,9 +156,26 @@ class _HomeScreenState extends State<HomeScreen> {
                               )),
                           TextButton(
                               onPressed: (() => goToDetailsScreen(post)),
-                              child: const Text(
-                                "Edit",
-                                style: TextStyle(color: Colors.blue),
+                              child: OpenContainer(
+                                transitionType:
+                                    ContainerTransitionType.fadeThrough,
+                                //closedColor:  Colors.blue, //.of(context).cardColor,
+                                openColor: Colors.white,
+                                //middleColor: Colors.white,
+                                closedElevation: 0.0,
+                                openElevation: 4.0,
+                                transitionDuration:
+                                    const Duration(milliseconds: 1000),
+                                openBuilder:
+                                    (BuildContext context, VoidCallback _) =>
+                                        DetailsScreen(post: post),
+                                closedBuilder: (BuildContext _,
+                                    VoidCallback openContainer) {
+                                  return const Text(
+                                    "Edit",
+                                    style: TextStyle(color: Colors.blue),
+                                  );
+                                },
                               )),
                         ],
                       ),
@@ -131,5 +187,34 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0));
+  }
+
+  showAlertDialog(BuildContext context, DataProvider dataProvider, int postId) {
+    Widget cancelButton = TextButton(
+      child: const Text("Cancel"),
+      onPressed: () {
+        Navigator.of(context).pop(); //
+      },
+    );
+    Widget continueButton = TextButton(
+      child: const Text("Confirm"),
+      onPressed: () {
+        dataProvider.deletePost(postId);
+      },
+    );
+    AlertDialog alert = AlertDialog(
+      title: Text("Delete Post with id: $postId"),
+      content: const Text("Are you sure?"),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 }

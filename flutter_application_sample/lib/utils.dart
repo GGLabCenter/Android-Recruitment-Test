@@ -6,5 +6,5 @@ class Utils {
 
   static const String baseUrl = "https://jsonplaceholder.typicode.com/";
   static const String urlPosts = 'posts/';
-  static const String urlComments = '{}/comments';
+  static const String urlComments = '/comments';
 }

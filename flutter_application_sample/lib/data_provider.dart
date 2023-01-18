@@ -7,22 +7,30 @@ class DataProvider {
   Client client = Client();
 
   String endpointPosts = Utils.baseUrl + Utils.urlPosts;
-  String endpointComments = Utils.baseUrl + Utils.urlPosts + Utils.urlComments;
 
   Future<List<Post>?> getPosts() async {
     final response = await client.get(Uri.parse(endpointPosts));
     if (response.statusCode == 200) {
-      // print(endpointPosts);
       return postFromJson(response.body);
     } else {
       return null;
     }
   }
 
-  Future<List<Comment>?> getComments() async {
-    final response = await client.get(Uri.parse(endpointComments));
+  Future<String> deletePost(int postId) async {
+    final response =
+        await client.delete(Uri.parse(endpointPosts + postId.toString()));
     if (response.statusCode == 200) {
-      print(endpointComments);
+      return 'ok';
+    } else {
+      return 'ko';
+    }
+  }
+
+  Future<List<Comment>?> getComments(int postId) async {
+    final response = await client
+        .get(Uri.parse(endpointPosts + postId.toString() + Utils.urlComments));
+    if (response.statusCode == 200) {
       return commentFromJson(response.body);
     } else {
       return null;
