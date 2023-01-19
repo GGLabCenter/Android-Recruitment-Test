@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late DataProvider _dataProvider;
+  List<Post>? posts;
 
   @override
   void initState() {
@@ -60,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       "Something went wrong, error message: ${snapshot.error.toString()}"),
                 );
               } else if (snapshot.connectionState == ConnectionState.done) {
-                List<Post>? posts = snapshot.data;
+                posts = snapshot.data;
                 return _buildListView(posts);
               } else {
                 return const Center(
@@ -77,8 +78,25 @@ class _HomeScreenState extends State<HomeScreen> {
   */
   void goToDetailsScreen(Post? post) {
     setState(() {
-      Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => DetailsScreen(post: post)));
+      Navigator.of(context)
+          .push(MaterialPageRoute(
+              builder: (context) => DetailsScreen(post: post)))
+          .then(
+            (post_) => setState(() {
+              if (post_ != null) {
+                int? index =
+                    posts?.indexWhere((element) => element.id == post_.id);
+                if (index != -1) {
+                  posts![index!] =
+                      post!; // post is not null when back from details.dart
+                } else {
+                  posts!.insert(0,
+                      post_); // putting on top of the list both new and existing posts just to make both easily visible
+                }
+                _buildListView(posts);
+              }
+            }),
+          );
     });
   }
 
@@ -141,14 +159,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         post.title,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
+                      Padding(padding: EdgeInsets.only(top: 10)),
                       Text(post.body),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
                           TextButton(
                               onPressed: () {
-                                showAlertDialog(
-                                    context, _dataProvider, post.id);
+                                showAlertDialog(context, _dataProvider, post);
                               },
                               child: const Text(
                                 "Delete",
@@ -189,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0));
   }
 
-  showAlertDialog(BuildContext context, DataProvider dataProvider, int postId) {
+  showAlertDialog(BuildContext context, DataProvider dataProvider, Post post) {
     Widget cancelButton = TextButton(
       child: const Text("Cancel"),
       onPressed: () {
@@ -199,11 +217,16 @@ class _HomeScreenState extends State<HomeScreen> {
     Widget continueButton = TextButton(
       child: const Text("Confirm"),
       onPressed: () {
-        dataProvider.deletePost(postId);
+        dataProvider.deletePost(post).then((value) {
+          setState(() {
+            Navigator.of(context).pop();
+            posts?.remove(value);
+          });
+        });
       },
     );
     AlertDialog alert = AlertDialog(
-      title: Text("Delete Post with id: $postId"),
+      title: Text("Delete Post with id: ${post.id}"),
       content: const Text("Are you sure?"),
       actions: [
         cancelButton,

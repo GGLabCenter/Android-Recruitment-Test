@@ -15,7 +15,8 @@ class Post {
   factory Post.fromJson(Map<String, dynamic> map) {
     return Post(
         id: map["id"],
-        userId: map["userId"],
+        userId:
+            map["userId"] is String ? int.parse(map["userId"]) : map["userId"],
         title: map["title"],
         body: map["body"]);
   }
