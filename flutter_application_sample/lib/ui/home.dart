@@ -79,28 +79,30 @@ class _HomeScreenState extends State<HomeScreen> {
   /*
   DetailsScreen is used to add a new post or open in view mode an existing post.
   */
-  void goToDetailsScreen(Post? post) {
-    setState(() {
-      Navigator.of(context)
-          .push(MaterialPageRoute(
-              builder: (context) => DetailsScreen(post: post)))
-          .then(
-            (post_) => setState(() {
-              if (post_ != null) {
-                int? index =
-                    posts?.indexWhere((element) => element.id == post_.id);
-                if (index != -1) {
-                  posts![index!] =
-                      post!; // post is not null when back from details.dart
-                } else {
-                  posts!.insert(0,
-                      post_); // putting on top of the list both new and existing posts just to make both easily visible
-                }
-                _buildListView(posts);
-              }
-            }),
-          );
-    });
+  Future<void> goToDetailsScreen(Post? post) async {
+    await Navigator.of(context)
+        .push(
+            MaterialPageRoute(builder: (context) => DetailsScreen(post: post)))
+        .then(((post_) {
+      if (post_ != null) {
+        setState(() {
+          post_.id = 3;
+          int? index = posts?.indexWhere((element) => element.id == post_.id);
+          if (index != -1) {
+            print("post is already in the list... coming back from Edit");
+            posts![index!] =
+                post_!; // post is not null when back from details.dart
+          } else {
+            print("post was not found in the list... coming back from New");
+            posts!.insert(0,
+                post_); // putting on top of the list both new and existing posts just to make both easily visible
+          }
+        });
+      } else {
+        print("to handle - return was null");
+        // should never happen btw.
+      }
+    }));
   }
 
   void _showModalSheet(int postId) {
@@ -125,16 +127,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: comments!.length,
                       itemBuilder: (context, index) {
                         Comment comment = comments[index];
+                        print('comments count: ${comments.length.toString()}');
                         return Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Card(
-                                child: Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Text(comment.body))));
+                          padding: const EdgeInsets.all(4.0),
+                          child: Card(
+                              child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Text(comment.body))),
+                        );
                       });
                 } else {
                   return const Center(
-                    child: CircularProgressIndicator(),
+                    child: CircularProgressIndicator(color: Colors.white),
                   );
                 }
               },
@@ -162,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         post.title,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      Padding(padding: EdgeInsets.only(top: 10)),
+                      const Padding(padding: EdgeInsets.only(top: 10)),
                       Text(post.body),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,

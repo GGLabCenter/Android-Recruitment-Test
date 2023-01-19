@@ -124,6 +124,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               setState(() => _isLoading = true);
                               String body = _controllerBody.text.toString();
                               String title = _controllerTitle.text.toString();
+                              widget.post!.body = body;
+                              widget.post!.title = title;
                               _dataProvider
                                   .updatePost(widget.post!)
                                   .then((isSuccess) {
@@ -177,8 +179,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget _buildTextFieldBody(Post? post) {
     if (post != null) {
       _controllerBody.text = post.body;
-      _controllerTitle.selection =
-          TextSelection.collapsed(offset: _controllerTitle.text.length);
+      _controllerBody.selection =
+          TextSelection.collapsed(offset: _controllerBody.text.length);
     }
     return TextField(
       controller: _controllerBody,
@@ -192,7 +194,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       ),
       onChanged: (value) {
         bool isFieldValid = value.trim().isNotEmpty;
-        if (isFieldValid) {
+        if (isFieldValid != _isFieldBodyValid) {
           setState(() => _isFieldBodyValid = isFieldValid);
         }
       },

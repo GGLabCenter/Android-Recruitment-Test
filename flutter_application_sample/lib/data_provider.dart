@@ -41,7 +41,8 @@ class DataProvider {
     final response = await client.post(Uri.parse(endpointPosts),
         headers: headers, body: json.encode(payload));
     if (response.statusCode == 201) {
-      print(Post.fromJson(json.decode(response.body)).toString());
+      print('updatePost: ' +
+          Post.fromJson(json.decode(response.body)).toString());
       return Post.fromJson(json.decode(response.body));
     } else {
       return null;
@@ -60,7 +61,8 @@ class DataProvider {
     final response = await client.post(Uri.parse(endpointPosts),
         headers: headers, body: json.encode(payload));
     if (response.statusCode == 201) {
-      print(Post.fromJson(json.decode(response.body)).toString());
+      print('createPost: ' +
+          Post.fromJson(json.decode(response.body)).toString());
       return Post.fromJson(json.decode(response.body));
     } else {
       return null;
@@ -71,6 +73,10 @@ class DataProvider {
     final response = await client
         .get(Uri.parse(endpointPosts + postId.toString() + Utils.urlComments));
     if (response.statusCode == 200) {
+      print('getComments OK at: ' +
+          endpointPosts +
+          postId.toString() +
+          Utils.urlComments);
       return commentFromJson(response.body);
     } else {
       return null;
