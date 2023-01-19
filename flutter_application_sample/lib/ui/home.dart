@@ -51,25 +51,28 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text(widget.title),
         ),
         body: SafeArea(
-          child: FutureBuilder(
-            future: _dataProvider.getPosts(),
-            builder:
-                (BuildContext context, AsyncSnapshot<List<Post>?> snapshot) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(
-                      "Something went wrong, error message: ${snapshot.error.toString()}"),
-                );
-              } else if (snapshot.connectionState == ConnectionState.done) {
-                posts = snapshot.data;
-                return _buildListView(posts);
-              } else {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
-          ),
+          child: posts == null
+              ? FutureBuilder(
+                  future: _dataProvider.getPosts(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<List<Post>?> snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                            "Something went wrong, error message: ${snapshot.error.toString()}"),
+                      );
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.done) {
+                      posts = snapshot.data;
+                      return _buildListView(posts);
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
+                )
+              : _buildListView(posts),
         ));
   }
 
@@ -207,21 +210,24 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0));
   }
 
+  late BuildContext dialogContext;
   showAlertDialog(BuildContext context, DataProvider dataProvider, Post post) {
     Widget cancelButton = TextButton(
       child: const Text("Cancel"),
       onPressed: () {
-        Navigator.of(context).pop(); //
+        Navigator.pop(dialogContext);
       },
     );
     Widget continueButton = TextButton(
       child: const Text("Confirm"),
       onPressed: () {
         dataProvider.deletePost(post).then((value) {
-          setState(() {
-            Navigator.of(context).pop();
-            posts?.remove(value);
-          });
+          if (value != null) {
+            Navigator.pop(dialogContext);
+            setState(() {
+              posts?.remove(value);
+            });
+          }
         });
       },
     );
@@ -235,7 +241,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext context_) {
+        dialogContext = context_;
         return alert;
       },
     );
